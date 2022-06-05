@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+	<head>
+		<meta charset="UTF-8">
+		<title>第三次作业</title>
+		<script src="js/jquery.js"></script>
+		<link rel="stylesheet" href="./css/style.css">
+		<link rel="stylesheet" href="https://js.arcgis.com/4.23/esri/themes/light/main.css">
+
+		<link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css" />
+
+		<style type="text/css">
+			.link{
+				font-size: 14px;
+			}
+			
+		</style>
+		<script src="https://js.arcgis.com/4.23/"></script>
+
+
+	</head>
+
+	<body>
+		<div id="viewDiv"></div>
+<!-- ---------------------------------控制台----------------------------------------------------------->
+		<div id="layerController">
+			<h1 style="text-align: center;">控制台</h1>
+			<hr>
+			<h3>底图选择</h3>
+			<select id="bm">
+			</select>
+			<hr>
+			<h3>专题图层列表</h3>
+			<ul id="layerControl">
+			</ul>
+			<hr>
+			<form id="addLayer">
+				<b><p style="font-size: 14px;">添加图层</p></b>
+				<input type="text" name="url" id="input" value="" placeholder="请输入url"><br>
+				<input type="button" id="addLayerBtn" value="click here to add layer"  />
+			</form>
+			<hr>
+			<p id="num">-----</p>
+			<hr>
+			<div id="information">
+				<span id="position"></span>
+				<p id="scaleNum"></p>
+				<div id="scale"></div>
+			</div>
+			<hr>
+			<div id="example">
+				<h2 style="text-align: center;">示例链接</h2>
+				<span class="link" value=0>
+					https://sampleserver6.arcgisonline.com/arcgis/rest/services/USA/MapServer</span>
+				<span class="link" value=1>
+					https://nowcoast.noaa.gov/arcgis/rest/services/nowcoast/analysis_ocean_sfc_sst_time/MapServer</span>
+				<span class="link" value=3>
+					https://services.arcgisonline.com/arcgis/rest/services/World_Terrain_Base/MapServer</span>
+					<hr>
+				<h3>操作提示：<br>（1）点击示例链接<br>（2）点击"click here to add layer"添加图层</h3>
+			</div>
+			<script>
+				var obj = document.getElementsByClassName("link");
+				//选择当前对象
+				var input=document.getElementById("input");
+				console.log(obj);
+				for (let i = 0; i<obj.length; i++) {
+					obj[i].addEventListener("click",function(){
+						input.value=this.innerText;
+					});
+				};
+			</script>
+		</div>
+
+		<div id="container"></div>
+
+		<script type="text/javascript" src="https://webapi.amap.com/maps?v=1.4.15&key=40a4077bbec66c6e1b4c150e5c48e189">
+		</script>
+
+		<script>
+			layerName = [];
+			layerUrl = [];
+			baseMap = ["osm", "satellite", "oceans", "national-geographic", "hybrid", "gray", "dark-gray"];
+// --------------------------------定义图层管理函数-------------------------------------------------------------------
+			//初始化图层管理控件
+			function init() {
+				//管理底图
+				let bm = $('#bm');
+				//底图下拉列表
+				for (let i = 0; i < baseMap.length; i++) {
+					let option = $('<option value=' + baseMap[i] + '>' + baseMap[i] + '</option>');
+					bm.append(option);
+				};
+			};
+			//调用图层管理控件，加载图层
+			init();
+
+			//定义专题图层管理控件
+			function layerManage() {
+				//清空内部元素
+				let layerControl = $('#layerControl');
+				layerControl.empty();
+				//添加复选框
+				for (let i = 0; i < layerName.length; i++) {
+					let li = $('<li></li>');
+					let checkbox = $('<input value=' + i + ' class="lm" type="checkbox" checked ><span>');
+					let span = $('<span class="layername">' + layerName[i] + '</span>');
+					let del = $('<a value=' + i + ' class="del">remove</a>');
+					li.append(checkbox);
+					li.append(span);
+					li.append(del)
+					layerControl.append(li);
+				};
+				//计算图层的数量
+				$('#num').text('图层数量：' + layerName.length);
+			};
+
+// -----------------------为副窗口加载高德地图图层-----------------------------------------------------------------------
+			//加载高德地图
+			var Amap = new AMap.Map('container', {
+				resizeEnable: true, //是否监控地图容器尺寸变化
+				zoom: 11, //初始化地图层级
+				center: [116.397428, 39.90923] //初始化地图中心点
+			});
+			Amap.on('click', function(e) {
+				alert(e.lnglat.getLng() + ',' + e.lnglat.getLat())
+			})
+			Amap.setCenter([120.805, 30.027]);
+			Amap.setZoom(5);
+
+
+// --------------------------------------------------------------------------------------------------------------------------------
+			require(["esri/config",
+					"esri/Map",
+					"esri/views/MapView",
+					"esri/layers/FeatureLayer",
+					"esri/layers/MapImageLayer",
+					"esri/geometry/Point",
+					"esri/core/watchUtils"
+				],
+				function(esriConfig, Map, MapView, FeatureLayer, MapImageLayer, Point, watchUtils) {
+					esriConfig.apiKey =
+						"AAPK56e3ac027f044c4089d8ceec232fc05dYaOuzVRzm8tMRqvzOvDvIEevbqJ85yppn9PacU6cy4duurJrVK9wo_8BcWO8i8bi";
+					const map = new Map({
+						basemap: "osm" // Basemap layer service
+					});
+
+					const view = new MapView({
+						map: map,
+						center: [71, 40], // Longitude, latitude
+						zoom: 3, // Zoom level
+						container: "viewDiv" // Div element
+					});
+
+					//添加切换图层的事件
+					document.getElementById('bm').addEventListener('change', function() {
+						map.basemap = $('#bm').val()
+					})
+
+					//创建一个数组用于保存所有图层
+					var layers = [];
+					//创建图层,并加载
+					function createLayer(layerType, url) {
+						if (layerType == "F") {
+							let layer = new FeatureLayer({
+								url: url
+							});
+							//alert("createF");
+							layers.push(layer);
+							map.add(layer)
+						} else {
+							let layer = new MapImageLayer({
+								url: url
+							});
+							layers.push(layer);
+							//alert("createM");
+							// alert(layerName)
+							map.add(layer)
+						};
+					};
+// -----------------------------解析url并添加图层-----------------------------------------------
+					document.getElementById("addLayerBtn").addEventListener("click", function() {
+						addLayerBtn(); //触发点击事件
+					});
+
+					function addLayerBtn() {
+						var url = $("#input").val();
+						//var name = $("#name").val();
+						//alert(url);
+						var layerType,name = parseUrl(url); //得到图层类型
+						layerName.push(name);
+						layerUrl.push(url);
+						createLayer(layerType, url);
+						layerManage();
+						$(".lm").change(function() {
+							if (this.checked === true) {
+								map.add(layers[this.value]);
+								
+
+							} else {
+								map.remove(layers[this.value]);
+							};
+						});
+						//移除图层
+						$(".del").click(function() {
+							// alert(this.value)
+							let index = this.getAttribute("value");
+							
+							map.remove(layers[index]);
+							//将其从列表中删除
+							layerName.splice(index, 1);
+							layerUrl.splice(index, 1);
+							layers.splice(index, 1);
+							//重新生成复选框
+							layerManage();
+							// console.log(layerName)
+							//重新绑定事件
+							$(".lm").change(function() {
+								if (this.checked === true) {
+									map.add(layers[this.value])
+									//alert(this.value)
+								} else {
+									map.remove(layers[this.value])
+								}
+							})
+							//绑定删除事件
+							del();
+						});
+
+						function del() {
+							$(".del").click(function() {
+								let index = this.getAttribute("value");
+								map.remove(layers[index]);
+								layerName.splice(index, 1);
+								layerUrl.splice(index, 1);
+								layers.splice(index, 1);
+								layerManage();
+								$(".lm").change(function() {
+									if (this.checked === true) {
+										map.add(layers[this.value])
+										//alert(this.value)
+									} else {
+										map.remove(layers[this.value])
+									};
+								});
+							});
+							//重新绑定事件
+							$(".lm").change(function() {
+								if (this.checked === true) {
+									map.add(layers[this.value])
+									alert(this.value)
+								} else {
+									map.remove(layers[this.value])
+								};
+							});
+
+						};
+						$("#input").val('');
+						
+					};
+
+					function parseUrl(url) {
+						var startIndex,endIndex,layerType,s,ss,layername;
+						endIndex = url.lastIndexOf('/');
+						layerType = url.substr(endIndex + 1, 1);
+						//alert("layerType:"+layerType);
+						s=url.substring(0,endIndex);
+						name_index=s.lastIndexOf('/');
+						layername=s.substring(name_index + 1);
+						//alert(layername);
+						return layerType,layername;
+					};
+
+// ----------------------------显示坐标、比例尺-------------------------------------------------------------------------
+					view.on('pointer-move', function(e) {
+						//将屏幕坐标转化为经纬度
+						let point = view.toMap({
+							x: e.x,
+							y: e.y
+						});
+						//显示经纬度
+						$('#position').html("纬度：" + point.latitude + '<br/>' + "经度：" + point.longitude);
+						// 显示比例尺(MapView自带属性scale)
+						let pscale = view.scale
+						$('#scaleNum').text("比例尺：" + pscale)
+					});
+// ------------------------------图层联动------------------------------------------------------------------------------------
+					watchUtils.whenTrue(view, "stationary",
+						function() {
+							Amap.setZoom(view.zoom);
+							Amap.setCenter([view.center.longitude, view.center.latitude]);
+							console.log('==')
+						}
+					);
+// -----------------------------一键复制-------------------------------------------------------------------------------------------
+					//复制按钮事件绑定
+
+
+
+				});
+		</script>
+	</body>
+
+</html>
+ 

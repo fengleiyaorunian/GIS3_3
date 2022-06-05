@@ -1,0 +1,72 @@
+#viewDiv {
+	position: absolute;
+    width: 960px;
+    height:380px;
+    border: 1px solid black;
+    top:0px;
+    left:0px;
+}
+
+#container {
+	position: absolute;
+    width: 960px;
+    height:380px;
+    border: 1px solid black;
+	top:385px;
+	left:0px;
+}
+#layerController{
+	position: absolute;
+	border: 1px solid black;
+	width: 560px;
+	height: 760px;
+	top: 0px;
+	right: 0px;
+}
+h2{
+    align-content: center;
+}
+ul{
+    list-style: none;
+}
+.layername{
+	font-size: 14px;
+}
+.del {
+	position: absolute;
+	right: 0px;
+	width: 40px;
+	border: 1px solid #73AD21;
+	padding: 0px;
+}
+#layerControl{
+	
+	height: 100px;
+	
+}
+#inputUrl{
+	position: absolute;
+	top: 240px;
+	left:800px;
+	
+}
+#addLayerBtn{
+	background-color: aliceblue;
+	border: 2px;
+	size: 20px;
+	text-align: center;
+}
+#information{
+	height: 50px;
+}
+#position{
+	/* position: absolute; */
+	top: 410px;
+	left:800px;
+}
+
+#scaleNum {
+    top: 420px;
+    left:800px;
+};
+
